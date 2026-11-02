@@ -1,0 +1,21 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "SmartHire: Django server (open Chrome)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/manage.py",
+      "args": ["runserver", "127.0.0.1:8000", "--noreload"],
+      "python": "${workspaceFolder}/.venv/Scripts/python.exe",
+      "django": true,
+      "console": "internalConsole",
+      "serverReadyAction": {
+        "pattern": "Starting development server at (https?://\\S+)",
+        "uriFormat": "%s",
+        "action": "debugWithChrome",
+        "webRoot": "${workspaceFolder}"
+      }
+    }
+  ]
+}

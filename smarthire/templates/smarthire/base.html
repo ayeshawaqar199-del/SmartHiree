@@ -1,1 +1,56 @@
-{% load static %}<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{% block title %}SmartHire{% endblock %}</title><link rel="stylesheet" href="{% static 'smarthire/style.css' %}"></head><body><nav class="nav"><a class="brand" href="{% url 'welcome' %}">◈ SmartHire</a><div class="nav-links"><a href="{% url 'home' %}">How it works</a><a href="{% url 'job_list' %}">Find jobs</a>{% if user.is_authenticated %}<a href="{% url 'dashboard' %}">Dashboard</a>{% if user.profile.role == 'employer' %}<a href="{% url 'job_create' %}">Post a job</a>{% endif %}<form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link-button">Sign out</button></form>{% else %}<a href="{% url 'login' %}">Sign in</a><a class="button small" href="{% url 'signup' %}">Get started</a>{% endif %}</div></nav><main>{% if messages %}<div class="messages">{% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}</div>{% endif %}{% block content %}{% endblock %}</main><footer>SmartHire <span>Thoughtful hiring starts with a better match.</span></footer></body></html>
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Smart Hire{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'smarthire/style.css' %}?v=burgundy-beige">
+</head>
+<body>
+  <nav class="nav" aria-label="Main navigation">
+    <a class="brand" href="{% url 'welcome' %}" aria-label="Smart Hire home">
+      <svg class="brand-logo" viewBox="0 0 120 120" aria-hidden="true">
+        <defs>
+          <clipPath id="smarthire-logo-clip"><rect x="8" y="8" width="104" height="104" rx="30"></rect></clipPath>
+        </defs>
+        <rect class="brand-tile" x="8" y="8" width="104" height="104" rx="30"></rect>
+        <circle class="brand-person brand-head" cx="60" cy="44" r="14"></circle>
+        <path class="brand-person brand-body" d="M32 94C32 74 46 64 60 64S88 74 88 94Z"></path>
+        <path class="brand-check" d="M48 82L57 90L74 73"></path>
+        <g clip-path="url(#smarthire-logo-clip)">
+          <rect class="brand-shine" x="0" y="-10" width="26" height="140" transform="skewX(-20)"></rect>
+        </g>
+      </svg>
+      <span class="brand-copy">
+        <span class="brand-word"><span class="brand-smart">Smart</span><span class="brand-hire">Hire</span></span>
+        <span class="brand-tag">Hire with confidence.</span>
+      </span>
+    </a>
+    <div class="nav-links">
+      <a href="{% url 'home' %}">How it works</a>
+      <a href="{% url 'job_list' %}">Find jobs</a>
+      {% if user.is_authenticated %}
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        {% if user.profile.role == 'employer' %}<a href="{% url 'job_create' %}">Post a job</a>{% endif %}
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link-button">Sign out</button></form>
+      {% else %}
+        <a href="{% url 'login' %}">Sign in</a>
+        <a class="button small" href="{% url 'signup' %}">Get started</a>
+      {% endif %}
+    </div>
+  </nav>
+  <main>
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}<div class="message {{ message.tags }}">{{ message }}</div>{% endfor %}
+      </div>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer><span class="footer-brand">Smart Hire</span><span>Thoughtful hiring starts with a better match.</span></footer>
+</body>
+</html>

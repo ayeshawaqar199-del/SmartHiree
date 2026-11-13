@@ -35,3 +35,14 @@ The site opens on the welcome page at `/`. Use **How it works** to continue to t
 ```powershell
 .venv\Scripts\python.exe manage.py seed_demo_jobs
 ```
+
+## Run locally without MySQL
+
+For a quick local run, set up the Python environment once:
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+```
+
+Then run `run-local.bat`. It uses a project-local SQLite database at `db.sqlite3`, applies migrations, and starts the site at http://127.0.0.1:8000. The normal configuration continues to use MySQL unless `SMARTHIRE_DB=sqlite` is set.

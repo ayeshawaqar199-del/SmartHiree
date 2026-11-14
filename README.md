@@ -22,11 +22,11 @@ If your WampServer MySQL root account has a password or uses another port, set `
 
 ## First use
 
-Create a Candidate account to explore and apply for jobs. Create an Employer account to post roles and manage incoming applications. Candidate profiles include a headline and bio that are compared with comma-separated job skills. The score shows the percentage of listed skills found in the profile, so it is understandable and easy to improve.
+Create a Candidate account to explore and apply for jobs. Create an Employer account to post roles and manage incoming applications. Candidate profiles include a headline, bio, and skills. SmartHire extracts skills from text-based PDF and DOCX CVs and shows the matched and missing job skills beside an explainable score.
 
-Registration requires names, a unique valid email, and Django's strong password validation. Job pay is numeric and min/max values are checked. Resume uploads accept PDF/DOC/DOCX up to 5 MB. Candidates may apply once per role; employers can only change applications for their own jobs.
+Registration requires names, a unique valid email, and Django's strong password validation. Job pay is numeric and min/max values are checked. CV uploads accept text-based PDF or DOCX files up to 5 MB; scanned PDFs need OCR and are not parsed. Candidates may apply once per role; employers can only change applications for their own jobs.
 
-The project uses Django migrations to create all tables in WampServer. The original SQLite file from the supplied project is not used.
+The project uses Django migrations to create all tables in WampServer. Resume downloads are available only to the candidate, the employer handling their application, or an administrator.
 
 ## Welcome flow and demo jobs
 
@@ -46,3 +46,22 @@ python -m venv .venv
 ```
 
 Then run `run-local.bat`. It uses a project-local SQLite database at `db.sqlite3`, applies migrations, and starts the site at http://127.0.0.1:8000. The normal configuration continues to use MySQL unless `SMARTHIRE_DB=sqlite` is set.
+### Proposal requirements covered
+
+The current SmartHire flows cover these functional requirements:
+
+1. Candidate, employer, and administrator roles with role-checked pages and actions.
+2. Candidate profile management, including headline, location, bio, and self-entered skills.
+3. CV upload to a candidate profile or an individual application.
+4. Text extraction from PDF and DOCX CVs with a 5 MB upload limit.
+5. Skill extraction from CV text using a maintained skill catalog plus role-specific skill phrases.
+6. Employer job creation with role requirements, employment type, location, and salary range.
+7. Job discovery by title, company, skills, description, and location.
+8. Candidate applications with an optional cover letter and CV.
+9. Explainable match scores with the matched and missing skills displayed.
+10. Candidate recommendations ordered by skill match.
+11. Employer applicant rankings per job, including skill evidence and CV review status.
+12. Application status updates, with notifications for employers and candidates.
+13. Administrator review of CV status from Django Admin.
+
+Matching is transparent keyword and skill phrase matching; it is not a trained AI model. Scanned PDFs without selectable text need OCR and are reported as unsupported. To use CV extraction, install all project dependencies with `python -m pip install -r requirements.txt`, apply migrations, and sign in as a candidate. Create an administrator with `python manage.py createsuperuser` to review CVs in `/admin/`.

@@ -179,6 +179,31 @@ footer{color:var(--muted);border-color:var(--line)}.footer-brand{color:var(--bur
 @keyframes brand-up{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes brand-fade{to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.brand-logo *,.brand-word span,.brand-tag{animation:none!important;opacity:1;stroke-dashoffset:0}}
+
+@keyframes smarthire-rise-in{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes smarthire-soft-drift{from{transform:translate3d(0,0,0)}to{transform:translate3d(8px,10px,0)}}
+@media(prefers-reduced-motion:no-preference){
+  .home-hero-copy{animation:smarthire-rise-in .62s cubic-bezier(.2,.7,.2,1) both}
+  .home-job-search{animation:smarthire-rise-in .62s .12s cubic-bezier(.2,.7,.2,1) both}
+  .home-search-foot{animation:smarthire-rise-in .62s .22s cubic-bezier(.2,.7,.2,1) both}
+  .home-stats-strip{animation:smarthire-rise-in .58s .12s cubic-bezier(.2,.7,.2,1) both}
+  .home-category-grid>a,.home-job-row,.home-how-grid article,.home-review-card,.home-path-card{animation:smarthire-rise-in .55s cubic-bezier(.2,.7,.2,1) both}
+  .home-category-grid>a:nth-child(2),.home-job-row:nth-child(2),.home-how-grid article:nth-child(2),.home-review-card:nth-child(2){animation-delay:.07s}
+  .home-category-grid>a:nth-child(3),.home-job-row:nth-child(3),.home-how-grid article:nth-child(3),.home-review-card:nth-child(3){animation-delay:.14s}
+  .home-category-grid>a:nth-child(4),.home-job-row:nth-child(4){animation-delay:.21s}
+  .home-category-grid>a:nth-child(5),.home-job-row:nth-child(5){animation-delay:.28s}
+  .home-category-grid>a:nth-child(6),.home-job-row:nth-child(6){animation-delay:.35s}
+  .home-job-row:nth-child(7){animation-delay:.42s}.home-job-row:nth-child(8){animation-delay:.49s}
+  .home-employer-card{animation-delay:.1s}
+  .home-search-hero:before{animation:smarthire-soft-drift 9s ease-in-out infinite alternate}
+  .home-search-hero:after{animation:smarthire-soft-drift 11s 1s ease-in-out infinite alternate-reverse}
+  .home-category-grid>a:hover,.home-job-row:hover,.home-review-card:hover{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease}
+}
+@media(prefers-reduced-motion:reduce){
+  .home-search-hero:before,.home-search-hero:after{animation:none!important}
+  .home-hero-copy,.home-job-search,.home-search-foot,.home-stats-strip,.home-category-grid>a,.home-job-row,.home-how-grid article,.home-review-card,.home-path-card{animation:none!important;opacity:1;transform:none}
+  .home-category-grid>a,.home-job-row,.home-review-card{transition:none!important}
+}
 @media(max-width:760px){.nav{height:auto;min-height:68px;padding:10px 16px;gap:8px}.brand{gap:8px}.brand-logo{width:42px;height:42px}.brand-word{font-size:23px}.brand-tag{display:none}.nav-links{gap:9px;font-size:11px}.nav-links .button.small{padding:7px 9px;font-size:11px}.intro-hero{margin-top:0}}
 
 /* Proposal features: skill evidence, recommendations, CV review and notifications */

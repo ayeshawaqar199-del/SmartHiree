@@ -1,12 +1,12 @@
 from django.contrib import admin
 from django.urls import reverse
 from django.utils.html import format_html
-from .models import Application, Job, Notification, Profile
+from .models import Application, CompanyReport, ContactMessage, Job, Notification, Profile
 
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "role", "resume_verification", "location")
+    list_display = ("user", "role", "education_level", "experience_years", "resume_verification", "location")
     list_filter = ("role", "resume_verification")
     search_fields = ("user__username", "user__email", "skills", "resume_skills")
     exclude = ("resume",)
@@ -31,9 +31,9 @@ class ProfileAdmin(admin.ModelAdmin):
 
 @admin.register(Job)
 class JobAdmin(admin.ModelAdmin):
-    list_display = ("title", "company", "location", "employer", "is_active", "created_at")
+    list_display = ("title", "company", "location", "employment_type", "is_active", "created_at")
     list_filter = ("is_active", "employment_type")
-    search_fields = ("title", "company", "required_skills")
+    search_fields = ("title", "company", "required_skills", "preferred_skills")
 
 
 @admin.register(Application)
@@ -42,7 +42,7 @@ class ApplicationAdmin(admin.ModelAdmin):
     list_filter = ("status", "resume_verification")
     search_fields = ("job__title", "candidate__username", "candidate_skills")
     exclude = ("resume",)
-    readonly_fields = ("match_score", "matched_skills", "missing_skills", "candidate_skills", "resume_download")
+    readonly_fields = ("match_score", "matched_skills", "missing_skills", "match_explanation", "candidate_skills", "resume_download")
 
     @admin.display(description="CV file")
     def resume_download(self, obj):
@@ -68,3 +68,19 @@ class NotificationAdmin(admin.ModelAdmin):
     list_display = ("user", "message", "is_read", "created_at")
     list_filter = ("is_read", "created_at")
     search_fields = ("user__username", "message")
+
+
+@admin.register(CompanyReport)
+class CompanyReportAdmin(admin.ModelAdmin):
+    list_display = ("company_name", "status", "submitted_by", "created_at")
+    list_filter = ("status", "created_at")
+    search_fields = ("company_name", "website", "details")
+
+
+@admin.register(ContactMessage)
+class ContactMessageAdmin(admin.ModelAdmin):
+    list_display = ("subject", "name", "email", "is_read", "created_at")
+    list_filter = ("is_read", "created_at")
+    search_fields = ("name", "email", "subject", "message")
+    readonly_fields = ("name", "email", "subject", "message", "created_at")
+    readonly_fields = ("created_at",)

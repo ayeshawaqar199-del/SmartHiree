@@ -8,10 +8,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'smarthire/style.css' %}?v=proposal-1">
+  <link rel="stylesheet" href="{% static 'smarthire/style.css' %}?v=skill-autocomplete-1">
 </head>
 <body>
-  <nav class="nav" aria-label="Main navigation">
+  <nav class="nav site-header" aria-label="Main navigation">
     <a class="brand" href="{% url 'welcome' %}" aria-label="Smart Hire home">
       <svg class="brand-logo" viewBox="0 0 120 120" aria-hidden="true">
         <defs>
@@ -30,18 +30,24 @@
         <span class="brand-tag">Hire with confidence.</span>
       </span>
     </a>
-    <div class="nav-links">
-      <a href="{% url 'home' %}">How it works</a>
-      <a href="{% url 'job_list' %}">Find jobs</a>
+    <div class="nav-links site-header-links">
+      <a class="nav-alert" href="{% url 'reported_companies' %}"><span class="nav-alert-icon" aria-hidden="true">!</span><span>Beware! Reported Companies</span></a>
       {% if user.is_authenticated %}
-        <a href="{% url 'dashboard' %}">Dashboard</a>
-        <a href="{% url 'notifications' %}" class="notification-link">Inbox{% if unread_notification_count %}<span class="notification-count">{{ unread_notification_count }}</span>{% endif %}</a>
-        {% if user.profile.role == 'employer' %}<a href="{% url 'job_create' %}">Post a job</a>{% endif %}
+        <a href="{% url 'dashboard' %}"><span class="nav-symbol" aria-hidden="true">⌂</span>Dashboard</a>
+        <a href="{% url 'notifications' %}" class="notification-link"><span class="nav-symbol" aria-hidden="true">✉</span>Inbox{% if unread_notification_count %}<span class="notification-count">{{ unread_notification_count }}</span>{% endif %}</a>
         <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="link-button">Sign out</button></form>
       {% else %}
-        <a href="{% url 'login' %}">Sign in</a>
-        <a class="button small" href="{% url 'signup' %}">Get started</a>
+        <a href="{% url 'login' %}"><span class="nav-symbol" aria-hidden="true">⌕</span>Login</a>
+        <a href="{% url 'signup' %}"><span class="nav-symbol" aria-hidden="true">↗</span>Sign Up</a>
       {% endif %}
+      {% if user.is_authenticated and user.profile.role == 'employer' %}
+        <a class="button small nav-post" href="{% url 'job_create' %}">POST A JOB</a>
+      {% elif user.is_authenticated %}
+        <a class="button small nav-post" href="{% url 'job_list' %}">FIND JOBS</a>
+      {% else %}
+        <a class="button small nav-post" href="{% url 'post_job_entry' %}">POST A JOB</a>
+      {% endif %}
+      <a class="button small nav-employers" href="{% url 'employers' %}">Employers</a>
     </div>
   </nav>
   <main>
@@ -52,6 +58,7 @@
     {% endif %}
     {% block content %}{% endblock %}
   </main>
-  <footer><span class="footer-brand">Smart Hire</span><span>Thoughtful hiring starts with a better match.</span></footer>
+  <footer><span class="footer-brand">Smart Hire</span><span>Thoughtful hiring starts with a better match. <a href="{% url 'contact' %}">Contact us</a></span></footer>
+  <script src="{% static 'smarthire/skill-suggestions.js' %}?v=1" data-suggestions-url="{% url 'skill_suggestions' %}" defer></script>
 </body>
 </html>

@@ -1,1 +1,25 @@
-{% extends 'smarthire/base.html' %}{% block title %}{{ job.title }} — SmartHire{% endblock %}{% block content %}<div class="detail-layout"><article class="panel"><a class="back" href="{% url 'job_list' %}">← All opportunities</a><div class="job-icon large">{{ job.company|first|upper }}</div><span class="tag">{{ job.employment_type }}</span><h1>{{ job.title }}</h1><p class="muted">{{ job.company }} · {{ job.location }}</p><hr><h3>About the role</h3><div class="prose">{{ job.description|linebreaks }}</div><h3>Skills we're looking for</h3><div class="skills">{{ job.required_skills }}</div></article><aside class="panel apply-panel"><span class="eyebrow">Your next move</span><h3>Ready to make it yours?</h3><p class="muted">Applications include a transparent skill-overlap score.</p>{% if applied %}<div class="message success">You have applied to this role.</div>{% elif user.is_authenticated %}<a class="button full" href="{% url 'apply_job' job.pk %}">Apply for this role →</a>{% else %}<a class="button full" href="{% url 'login' %}?next={% url 'apply_job' job.pk %}">Sign in to apply →</a>{% endif %}</aside></div>{% endblock %}
+{% extends 'smarthire/base.html' %}
+{% block title %}{{ job.title }} — SmartHire{% endblock %}
+{% block content %}
+<div class="detail-layout">
+  <article class="panel">
+    <a class="back" href="{% url 'job_list' %}">← All opportunities</a>
+    <div class="job-icon large">{{ job.company|first|upper }}</div>
+    <span class="tag">{{ job.employment_type }}</span>
+    <h1>{{ job.title }}</h1>
+    <p class="muted">{{ job.company }} · {{ job.location }}</p>
+    {% if job.salary_min or job.salary_max %}<p class="salary">PKR {{ job.salary_min|default:'Negotiable' }} – {{ job.salary_max|default:'Negotiable' }}</p>{% endif %}
+    <hr>
+    <h3>About the role</h3><div class="prose">{{ job.description|linebreaks }}</div>
+    <h3>Required skills</h3><div class="skills">{{ job.required_skills }}</div>
+    {% if job.preferred_skills %}<h3>Preferred skills</h3><div class="skills">{{ job.preferred_skills }}</div>{% endif %}
+    {% if job.minimum_education or job.experience_years %}<h3>Experience and education</h3><p class="muted">{% if job.minimum_education %}Minimum education: {{ job.get_minimum_education_display }}{% endif %}{% if job.minimum_education and job.experience_years %} · {% endif %}{% if job.experience_years %}Experience: {{ job.experience_years }}+ years{% endif %}</p>{% endif %}
+  </article>
+  <aside class="panel apply-panel">
+    <span class="eyebrow">Your next move</span><h3>Ready to make it yours?</h3>
+    <p class="muted">SmartHire offers decision support; employers make the final hiring decision.</p>
+    {% if candidate_match %}<div class="detail-match"><strong>{{ candidate_match.score }}% match</strong><p>{{ candidate_match.explanation }}</p><small>Matched: {{ candidate_match.matched|join:', '|default:'Add skills to your profile' }}{% if candidate_match.missing %} · Still to show: {{ candidate_match.missing|join:', ' }}{% endif %}</small></div>{% endif %}
+    {% if applied %}<div class="message success">You have applied to this role.</div>{% elif user.is_authenticated and user.profile.role == 'candidate' %}<a class="button full" href="{% url 'apply_job' job.pk %}">Apply for this role →</a>{% elif user.is_authenticated %}<div class="empty">Candidate accounts can apply to this role.</div>{% else %}<a class="button full" href="{% url 'login' %}?next={% url 'apply_job' job.pk %}">Sign in to apply →</a>{% endif %}
+  </aside>
+</div>
+{% endblock %}

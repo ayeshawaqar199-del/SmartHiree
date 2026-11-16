@@ -3,46 +3,106 @@ from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
 from django.db import IntegrityError, transaction
 from django.db.models import Q
-from django.http import FileResponse, HttpResponseForbidden
+from django.http import FileResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
-from .forms import ApplicationForm, CandidateProfileForm, JobForm, SignUpForm
-from .matching import ResumeParseError, calculate_match, extract_resume_text, extract_skills, split_skills
-from .models import Application, Job, Notification, Profile
+from .forms import ApplicationForm, CandidateProfileForm, CompanyReportForm, ContactMessageForm, JobForm, SignUpForm
+from .matching import ResumeParseError, calculate_match, extract_resume_facts, extract_resume_text, extract_skills, split_skills, suggest_skills
+from .models import Application, CompanyReport, ContactMessage, Job, Notification, Profile
 
 User = get_user_model()
 
 
 def welcome(request):
-    return render(request, "smarthire/welcome.html")
+    jobs = Job.objects.filter(is_active=True).select_related("employer").order_by("-created_at")[:8]
+    return render(request, "smarthire/welcome.html", {
+        "jobs": jobs,
+        "active_job_count": Job.objects.filter(is_active=True).count(),
+        "employer_count": Profile.objects.filter(role="employer").count(),
+    })
 
 
 def home(request):
     return render(request, "smarthire/home.html", {"jobs": Job.objects.filter(is_active=True).order_by("-created_at")[:6]})
 
 
+def employers(request):
+    return render(request, "smarthire/employers.html")
+
+
+def mobile_app(request):
+    return render(request, "smarthire/mobile_app.html")
+
+
+def reported_companies(request):
+    form = CompanyReportForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        report = form.save(commit=False)
+        if request.user.is_authenticated:
+            report.submitted_by = request.user
+        report.save()
+        messages.success(request, "Your report was submitted privately for review.")
+        return redirect("reported_companies")
+    return render(request, "smarthire/reported_companies.html", {"form": form})
+
+
+def contact(request):
+    form = ContactMessageForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Thanks for reaching out. Your message has been sent to the SmartHire team.")
+        return redirect("contact")
+    return render(request, "smarthire/contact.html", {"form": form})
+
+
+def post_job_entry(request):
+    if request.user.is_authenticated and request.user.profile.role == "employer":
+        return redirect("job_create")
+    if request.user.is_authenticated:
+        messages.info(request, "Job posting is available to employer accounts. Create a separate employer account to continue.")
+    return redirect("employers")
+
+
 def job_list(request):
     jobs = Job.objects.filter(is_active=True).select_related("employer")
     q = request.GET.get("q", "").strip()
     location = request.GET.get("location", "").strip()
+    employment_type = request.GET.get("type", "").strip()
+    minimum_salary = request.GET.get("minimum_salary", "").strip()
     if q:
-        jobs = jobs.filter(Q(title__icontains=q) | Q(company__icontains=q) | Q(required_skills__icontains=q) | Q(description__icontains=q))
+        jobs = jobs.filter(Q(title__icontains=q) | Q(company__icontains=q) | Q(required_skills__icontains=q) | Q(preferred_skills__icontains=q) | Q(description__icontains=q))
     if location:
         jobs = jobs.filter(location__icontains=location)
-    return render(request, "smarthire/job_list.html", {"jobs": jobs, "q": q, "location": location})
+    if employment_type in dict(Job.EMPLOYMENT_TYPES):
+        jobs = jobs.filter(employment_type=employment_type)
+    if minimum_salary.isdigit():
+        jobs = jobs.filter(Q(salary_max__gte=int(minimum_salary)) | Q(salary_max__isnull=True))
+    return render(request, "smarthire/job_list.html", {
+        "jobs": jobs, "q": q, "location": location, "employment_type": employment_type,
+        "minimum_salary": minimum_salary, "employment_types": Job.EMPLOYMENT_TYPES,
+    })
+
+
+def skill_suggestions(request):
+    query = request.GET.get("q", "").strip()
+    return JsonResponse({"suggestions": suggest_skills(query)})
 
 
 def job_detail(request, pk):
     job = get_object_or_404(Job, pk=pk, is_active=True)
     applied = request.user.is_authenticated and Application.objects.filter(job=job, candidate=request.user).exists()
-    return render(request, "smarthire/job_detail.html", {"job": job, "applied": applied})
+    candidate_match = None
+    if request.user.is_authenticated and request.user.profile.role == "candidate":
+        candidate_match = calculate_match(job, request.user.profile)
+    return render(request, "smarthire/job_detail.html", {"job": job, "applied": applied, "candidate_match": candidate_match})
 
 
 def signup(request):
     if request.user.is_authenticated:
         return redirect("dashboard")
-    form = SignUpForm(request.POST or None)
+    initial = {"role": request.GET.get("role")} if request.GET.get("role") in ("candidate", "employer") else None
+    form = SignUpForm(request.POST or None, initial=initial)
     if request.method == "POST" and form.is_valid():
         try:
             with transaction.atomic():
@@ -76,7 +136,14 @@ def dashboard(request):
         jobs = list(Job.objects.filter(employer=request.user).order_by("-created_at"))
         ranked_jobs = []
         for job in jobs:
-            applicants = list(Application.objects.filter(job=job).select_related("candidate", "candidate__profile").order_by("-match_score", "created_at"))
+            applicants = list(Application.objects.filter(job=job).select_related("candidate", "candidate__profile"))
+            for application in applicants:
+                current_match = calculate_match(job, application.candidate.profile)
+                application.match_score = current_match["score"]
+                application.matched_skills = ", ".join(current_match["matched"])
+                application.missing_skills = ", ".join(current_match["missing"])
+                application.match_explanation = current_match["explanation"]
+            applicants.sort(key=lambda application: (application.match_score, application.created_at), reverse=True)
             for rank, application in enumerate(applicants, start=1):
                 application.rank = rank
             ranked_jobs.append({"job": job, "applicants": applicants})
@@ -91,11 +158,13 @@ def dashboard(request):
         removing_resume = profile_form.cleaned_data.get("resume") is False
         resume_text = ""
         found_skills = []
+        resume_facts = {"education_level": "", "experience_years": None}
         if new_resume:
             try:
                 resume_text = extract_resume_text(new_resume)
-                all_job_skills = [skill for job in Job.objects.filter(is_active=True).only("required_skills") for skill in split_skills(job.required_skills)]
+                all_job_skills = [skill for job in Job.objects.filter(is_active=True).only("required_skills", "preferred_skills") for skill in split_skills(f"{job.required_skills},{job.preferred_skills}")]
                 found_skills = extract_skills(resume_text, extra_skills=all_job_skills)
+                resume_facts = extract_resume_facts(resume_text)
             except ResumeParseError as error:
                 profile_form.add_error("resume", str(error))
                 return render(request, "smarthire/candidate_dashboard.html", {
@@ -107,6 +176,10 @@ def dashboard(request):
         if new_resume:
             profile.resume_skills = ", ".join(found_skills)
             profile.resume_verification = "pending"
+            if not profile.education_level and resume_facts["education_level"]:
+                profile.education_level = resume_facts["education_level"]
+            if profile.experience_years is None and resume_facts["experience_years"] is not None:
+                profile.experience_years = resume_facts["experience_years"]
         elif removing_resume:
             profile.resume_skills = ""
             profile.resume_verification = "not_uploaded"
@@ -116,7 +189,13 @@ def dashboard(request):
             return redirect("dashboard")
         if new_resume:
             skill_message = ", ".join(found_skills) if found_skills else "No catalogued skills were detected; add your skills manually."
-            messages.success(request, f"CV text checked. Extracted skills: {skill_message} Verification is pending review.")
+            fact_message = []
+            if resume_facts["education_level"]:
+                fact_message.append(f"education: {resume_facts['education_level']}")
+            if resume_facts["experience_years"] is not None:
+                fact_message.append(f"experience: {resume_facts['experience_years']} years")
+            extracted = f" Profile details detected: {', '.join(fact_message)}." if fact_message else " Add or correct education and experience in your profile if needed."
+            messages.success(request, f"CV text checked. Extracted skills: {skill_message}.{extracted} Verification is pending review.")
         else:
             messages.success(request, "Your candidate profile has been updated.")
         return redirect("dashboard")
@@ -139,7 +218,32 @@ def job_create(request):
         job.save()
         messages.success(request, "Your job is live.")
         return redirect("dashboard")
-    return render(request, "smarthire/job_form.html", {"form": form})
+    return render(request, "smarthire/job_form.html", {"form": form, "is_edit": False})
+
+
+@login_required
+def job_edit(request, pk):
+    if request.user.profile.role != "employer":
+        return HttpResponseForbidden("Employer account required.")
+    job = get_object_or_404(Job, pk=pk, employer=request.user)
+    form = JobForm(request.POST or None, instance=job)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Your job posting has been updated.")
+        return redirect("dashboard")
+    return render(request, "smarthire/job_form.html", {"form": form, "is_edit": True, "job": job})
+
+
+@login_required
+@require_POST
+def job_close(request, pk):
+    if request.user.profile.role != "employer":
+        return HttpResponseForbidden("Employer account required.")
+    job = get_object_or_404(Job, pk=pk, employer=request.user)
+    job.is_active = not job.is_active
+    job.save(update_fields=["is_active"])
+    messages.success(request, "Your job listing is now open." if job.is_active else "Your job listing has been closed. Past applications are preserved.")
+    return redirect("dashboard")
 
 
 @login_required
@@ -169,6 +273,7 @@ def apply_job(request, pk):
         application.match_score = result["score"]
         application.matched_skills = ", ".join(result["matched"])
         application.missing_skills = ", ".join(result["missing"])
+        application.match_explanation = result["explanation"]
         application.candidate_skills = ", ".join(result["candidate_skills"])
         if resume_file:
             application.resume_verification = "pending"
@@ -186,7 +291,7 @@ def apply_job(request, pk):
         Notification.objects.create(
             user=job.employer,
             message=f"{request.user.get_full_name() or request.user.username} applied for {job.title}.",
-            link=reverse("dashboard"),
+            link=f"{reverse('dashboard')}#application-{application.pk}",
         )
         matched = ", ".join(result["matched"]) or "none of the listed skills yet"
         missing = ", ".join(result["missing"]) or "none"

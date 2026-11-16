@@ -4,21 +4,21 @@ SmartHire is a Django recruitment prototype for candidates and employers. It inc
 
 ## Run locally with WampServer
 
-1. Start WampServer and make sure its MySQL/MariaDB service is running (green Wamp icon). The default connection is `127.0.0.1:3306`, user `root`, blank password.
-2. Open phpMyAdmin and import `sql/create_database.sql`, or run that SQL in the MySQL console. It creates `smarthire_db`.
-3. In a terminal opened in this project folder, create the Python environment and install dependencies:
+1. Start WampServer and make sure its MySQL service is running. The default connection is `127.0.0.1:3306`, user `root`, blank password. If you use WampServer's MariaDB service instead, set `DB_PORT=3307` in `.env`.
+2. Open phpMyAdmin and import `sql/create_database.sql`, or run that SQL in the MySQL console. It creates `smarthire_app_db`. The older `smarthire_db` is left untouched.
+3. If this project does not already have a virtual environment, open a terminal in the project folder and create one, then install dependencies:
 
    ```powershell
-   py -m venv .venv
+   python -m venv .venv
    .venv\Scripts\python.exe -m pip install -r requirements.txt
    .venv\Scripts\python.exe manage.py migrate
    .venv\Scripts\python.exe manage.py createsuperuser
    .venv\Scripts\python.exe manage.py runserver
    ```
 
-4. Visit http://127.0.0.1:8000. `run.bat` performs migrations and starts the server (after the environment and dependencies are set up).
+4. Run `run.bat`. It selects WampServer/MySQL, applies migrations, and starts the server at http://127.0.0.1:8000. `run-local.bat` selects SQLite for an offline local run.
 
-If your WampServer MySQL root account has a password or uses another port, set `DB_PASSWORD` / `DB_PORT` in your terminal before starting Django, or update the defaults in `smarthire_project/settings.py`.
+Copy `.env.example` to `.env` to customize the database name, user, password, host, or port. Project environment variables take precedence over `.env` values.
 
 ## First use
 

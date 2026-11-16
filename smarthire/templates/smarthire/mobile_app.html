@@ -1,0 +1,16 @@
+{% extends 'smarthire/base.html' %}
+{% block title %}SmartHire on mobile{% endblock %}
+{% block content %}
+<section class="nav-landing mobile-landing">
+  <span class="eyebrow">SmartHire, wherever you are</span>
+  <h1>Your next opportunity<br><em>fits in your pocket.</em></h1>
+  <p>SmartHire is a mobile-friendly website. Open it in your phone browser to search roles, manage your profile and follow applications. No separate app install is needed.</p>
+  <div class="landing-actions">
+    <a class="button" href="{% url 'job_list' %}">Browse jobs on this device →</a>
+    <a class="button outline" href="{% url 'signup' %}">Create an account</a>
+  </div>
+  <div class="mobile-preview" aria-label="Mobile website features">
+    <span>⌕ Search jobs</span><span>✓ Track applications</span><span>✦ Compare skills</span>
+  </div>
+</section>
+{% endblock %}

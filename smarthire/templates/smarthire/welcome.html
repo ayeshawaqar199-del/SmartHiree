@@ -1,1 +1,85 @@
-{% extends 'smarthire/base.html' %}{% block title %}Welcome to Smart Hire — Your next opportunity starts here{% endblock %}{% block content %}<section class="intro-hero"><div class="intro-copy"><span class="eyebrow">A better way to move forward</span><h1>Find work that<br><em>fits your life.</em></h1><p>SmartHire brings people and opportunities together through clear skills, thoughtful profiles and transparent matches.</p><form class="intro-search" method="get" action="{% url 'job_list' %}"><label><span>What are you looking for?</span><input name="q" placeholder="Job title or skill"></label><label><span>Where?</span><input name="location" placeholder="City or remote"></label><button class="button">Search jobs →</button></form><p class="intro-note">No account needed to explore roles.</p></div><div class="intro-visual"><div class="intro-orbit"></div><div class="intro-center"><span>SH</span><small>skills meet<br>opportunity</small></div><div class="intro-card intro-card-one"><b>01</b><span>Show what you do well</span></div><div class="intro-card intro-card-two"><b>02</b><span>Find a role that fits</span></div><div class="intro-card intro-card-three"><b>03</b><span>Take your next step</span></div><span class="intro-star star-one">✦</span><span class="intro-star star-two">✧</span></div></section><section class="intro-trust"><div><b>For job seekers</b><span>Browse real opportunities, show your strengths and apply in one place.</span></div><div><b>For employers</b><span>Share a role, describe the skills you need and review applicants clearly.</span></div><a href="{% url 'home' %}" class="intro-next">See how SmartHire works <span>→</span></a></section><section class="intro-steps"><span class="eyebrow">Simple from the start</span><h2>Your next move, made clearer.</h2><div class="step-grid"><article><span>01</span><h3>Explore</h3><p>Search by role, skill or location and find opportunities that feel relevant.</p></article><article><span>02</span><h3>Show your skills</h3><p>Build a profile around the experience and strengths you bring.</p></article><article><span>03</span><h3>Connect</h3><p>Apply with confidence and follow each opportunity from your dashboard.</p></article></div></section>{% endblock %}
+{% extends 'smarthire/base.html' %}
+{% block title %}SmartHire — Find your next opportunity{% endblock %}
+{% block content %}
+<section class="home-search-hero">
+  <div class="home-hero-copy">
+    <span class="eyebrow">Your next move starts here</span>
+    <h1>Find a job<br><em>you’ll love.</em></h1>
+    <p>Search real opportunities by role, skill or location. Find a better fit with SmartHire.</p>
+  </div>
+  <form class="home-job-search" method="get" action="{% url 'job_list' %}">
+    <label class="home-search-field"><span>Job title, skill or company</span><input name="q" placeholder="e.g. Designer, Python, Acme"></label>
+    <label class="home-search-field"><span>City or location</span><input name="location" placeholder="e.g. Lahore or Remote"></label>
+    <button class="button" type="submit">Search jobs <span aria-hidden="true">→</span></button>
+  </form>
+  <div class="home-search-foot"><span>Popular searches</span><a href="{% url 'job_list' %}?q=software">Software</a><a href="{% url 'job_list' %}?q=design">Design</a><a href="{% url 'job_list' %}?q=marketing">Marketing</a><a href="{% url 'job_list' %}?q=internship">Internships</a></div>
+</section>
+
+<section class="home-category-section" aria-labelledby="home-categories-title">
+  <div class="home-stats-strip">
+    <div><strong>{{ active_job_count }}</strong><span>active opportunities</span></div>
+    <i aria-hidden="true"></i>
+    <div><strong>{{ employer_count }}</strong><span>employers on SmartHire</span></div>
+    <i aria-hidden="true"></i>
+    <div><strong>One place</strong><span>to find your next move</span></div>
+  </div>
+  <div class="home-category-heading"><div><span class="eyebrow">Explore by interest</span><h2 id="home-categories-title">Browse popular categories</h2></div><a class="text-link" href="{% url 'job_list' %}">All opportunities →</a></div>
+  <div class="home-category-grid">
+    <a href="{% url 'job_list' %}?q=software"><span class="category-icon">&lt;/&gt;</span><strong>Technology</strong><small>Software, IT and data</small><b aria-hidden="true">↗</b></a>
+    <a href="{% url 'job_list' %}?q=design"><span class="category-icon">✳</span><strong>Design</strong><small>Creative and product</small><b aria-hidden="true">↗</b></a>
+    <a href="{% url 'job_list' %}?q=marketing"><span class="category-icon">◉</span><strong>Marketing</strong><small>Brand and growth</small><b aria-hidden="true">↗</b></a>
+    <a href="{% url 'job_list' %}?q=sales"><span class="category-icon">↗</span><strong>Sales</strong><small>Business development</small><b aria-hidden="true">↗</b></a>
+    <a href="{% url 'job_list' %}?q=finance"><span class="category-icon">₨</span><strong>Finance</strong><small>Accounts and banking</small><b aria-hidden="true">↗</b></a>
+    <a href="{% url 'job_list' %}?q=internship"><span class="category-icon">✦</span><strong>Internships</strong><small>Start your career</small><b aria-hidden="true">↗</b></a>
+  </div>
+</section>
+
+<section class="home-jobs-section">
+  <div class="section-head">
+    <div><span class="eyebrow">Fresh opportunities</span><h2>Jobs for you</h2><p class="home-section-note">A few of the latest roles added to SmartHire.</p></div>
+    <a class="text-link" href="{% url 'job_list' %}">View all jobs <span aria-hidden="true">→</span></a>
+  </div>
+  <div class="home-job-list">
+    {% for job in jobs %}
+      <a class="home-job-row" href="{% url 'job_detail' job.pk %}">
+        <span class="home-job-logo" aria-hidden="true">{{ job.company|first|upper }}</span>
+        <span class="home-job-details"><strong>{{ job.title }}</strong><span>{{ job.company }} · {{ job.location }}</span><small>{{ job.required_skills|truncatechars:125 }}</small></span>
+        <span class="home-job-meta"><span class="tag">{{ job.employment_type }}</span><span class="home-job-arrow" aria-hidden="true">↗</span></span>
+      </a>
+    {% empty %}
+      <div class="empty home-empty">New opportunities are on the way. <a href="{% url 'job_list' %}">Browse all jobs</a></div>
+    {% endfor %}
+  </div>
+</section>
+
+<section class="home-how-section">
+  <div class="home-how-heading"><span class="eyebrow">A clearer way forward</span><h2>Three steps to your next opportunity.</h2><p>Find a role, show what you bring, and keep track of your progress.</p></div>
+  <div class="home-how-grid">
+    <article><span class="home-step-number">01</span><span class="home-step-icon" aria-hidden="true">⌕</span><h3>Explore roles</h3><p>Search open jobs by title, skill or city. No account is needed to browse.</p></article>
+    <article><span class="home-step-number">02</span><span class="home-step-icon" aria-hidden="true">✓</span><h3>Show your strengths</h3><p>Add your skills and CV so employers can understand what you do best.</p></article>
+    <article><span class="home-step-number">03</span><span class="home-step-icon" aria-hidden="true">↗</span><h3>Apply with confidence</h3><p>Apply to a role and follow your application from your dashboard.</p></article>
+  </div>
+</section>
+
+<section class="home-reviews-section" aria-labelledby="home-reviews-title">
+  <div class="home-reviews-heading"><div><span class="eyebrow">A preview of the experience</span><h2 id="home-reviews-title">What people value about a better match.</h2><p>Sample reviews for the SmartHire project preview.</p></div><span class="home-review-stamp">SAMPLE REVIEWS</span></div>
+  <div class="home-reviews-grid">
+    <article class="home-review-card"><div class="home-review-top"><span class="home-review-stars" aria-label="Sample rating">★★★★★</span><span class="home-review-label">Demo review</span></div><blockquote>“Searching by skills made it easier to find roles that actually fit my experience.”</blockquote><div class="home-review-person"><span>AK</span><div><strong>Amina K.</strong><small>Candidate · sample profile</small></div></div></article>
+    <article class="home-review-card"><div class="home-review-top"><span class="home-review-stars" aria-label="Sample rating">★★★★★</span><span class="home-review-label">Demo review</span></div><blockquote>“The clear applicant skill matches give our hiring team a helpful place to start.”</blockquote><div class="home-review-person"><span>BM</span><div><strong>Bilal M.</strong><small>Employer · sample profile</small></div></div></article>
+    <article class="home-review-card"><div class="home-review-top"><span class="home-review-stars" aria-label="Sample rating">★★★★★</span><span class="home-review-label">Demo review</span></div><blockquote>“I can keep my profile and applications together while I explore new opportunities.”</blockquote><div class="home-review-person"><span>SR</span><div><strong>Sana R.</strong><small>Candidate · sample profile</small></div></div></article>
+  </div>
+</section>
+
+<section class="home-pathways">
+  <article class="home-path-card home-candidate-card">
+    <span class="eyebrow">For job seekers</span><h2>Make your next step count.</h2>
+    <p>Build your profile, highlight your skills and apply to roles in one place.</p>
+    <a class="text-link" href="{% url 'signup' %}?role=candidate">Create a candidate profile <span aria-hidden="true">→</span></a>
+  </article>
+  <article class="home-path-card home-employer-card">
+    <span class="eyebrow">For employers</span><h2>Meet your next great hire.</h2>
+    <p>Post a role and review applicants with clear skill match information.</p>
+    <a class="text-link" href="{% url 'employers' %}">Explore hiring with SmartHire <span aria-hidden="true">→</span></a>
+  </article>
+</section>
+{% endblock %}

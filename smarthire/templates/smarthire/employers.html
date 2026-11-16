@@ -1,0 +1,18 @@
+{% extends 'smarthire/base.html' %}
+{% block title %}For employers — SmartHire{% endblock %}
+{% block content %}
+<section class="nav-landing">
+  <span class="eyebrow">For employers</span>
+  <h1>Find the right people<br><em>for your next role.</em></h1>
+  <p>Post full-time, part-time, contract or internship roles. Review applicants and see the skills behind each match.</p>
+  <div class="landing-actions">
+    <a class="button" href="{% url 'post_job_entry' %}">Post a job →</a>
+    <a class="button outline" href="{% url 'signup' %}?role=employer">Create an employer account</a>
+  </div>
+  <div class="employer-steps">
+    <article><b>01</b><h2>Describe the role</h2><p>Set location, employment type, salary range and required skills.</p></article>
+    <article><b>02</b><h2>Review matches</h2><p>See applicant skill evidence and transparent match scores.</p></article>
+    <article><b>03</b><h2>Keep candidates informed</h2><p>Update application status and send dashboard notifications.</p></article>
+  </div>
+</section>
+{% endblock %}

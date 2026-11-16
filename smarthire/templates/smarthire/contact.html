@@ -1,0 +1,44 @@
+{% extends 'smarthire/base.html' %}
+{% block title %}Contact SmartHire{% endblock %}
+{% block content %}
+<section class="contact-page">
+  <div class="contact-intro">
+    <span class="eyebrow">We’re here to help</span>
+    <h1>Let’s talk.</h1>
+    <p>Have a question about finding work, hiring, or your SmartHire account? Send the team a message and we’ll get back to you.</p>
+    <div class="contact-help-card">
+      <span class="contact-help-icon" aria-hidden="true">✉</span>
+      <div><strong>Your message goes to our team</strong><p>We’ll use the email address you provide to respond. Your message is kept private and reviewed by SmartHire administrators.</p></div>
+    </div>
+    <div class="contact-safety-card">
+      <span class="eyebrow">Need to report a concern?</span>
+      <p>For a suspicious company or job, use the private report form so our team can review the details.</p>
+      <a href="{% url 'reported_companies' %}">Report a company <span aria-hidden="true">→</span></a>
+    </div>
+  </div>
+  <form method="post" class="contact-form panel">
+    {% csrf_token %}
+    <h2>Send us a message</h2>
+    <p class="muted">Fill in the form and we’ll be in touch.</p>
+    {% for field in form %}
+      <div class="field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %}<span class="required">*</span>{% endif %}</label>
+        {{ field }}
+        {% for error in field.errors %}<small class="error">{{ error }}</small>{% endfor %}
+      </div>
+    {% endfor %}
+    {% for error in form.non_field_errors %}<div class="error">{{ error }}</div>{% endfor %}
+    <button class="button full" type="submit">Send message <span aria-hidden="true">→</span></button>
+  </form>
+</section>
+<section class="contact-direct" aria-labelledby="contact-direct-title">
+  <span class="eyebrow">Prefer to reach us directly?</span>
+  <h2 id="contact-direct-title">Contact us</h2>
+  <p class="contact-direct-note">We’re happy to hear from you.</p>
+  <div class="contact-direct-list">
+    <p><strong>Phone:</strong> <a href="tel:03300000000">0330-0000000</a></p>
+    <p><strong>Email:</strong> <a href="mailto:ayeshawaqar199@gmail.com">ayeshawaqar199@gmail.com</a></p>
+    <p><strong>Address:</strong> Oliver Colony, ABC Street, Islamabad, Pakistan</p>
+  </div>
+</section>
+{% endblock %}

@@ -1,8 +1,8 @@
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
 from django.core.validators import FileExtensionValidator
-from .models import Application, Job, Profile
+from .models import Application, CompanyReport, ContactMessage, Job, Profile
 
 
 class SignUpForm(UserCreationForm):
@@ -38,6 +38,10 @@ class SignUpForm(UserCreationForm):
         return user
 
 
+class EmailOrUsernameAuthenticationForm(AuthenticationForm):
+    username = forms.CharField(label="Username or email", widget=forms.TextInput(attrs={"autofocus": True, "placeholder": "Username or email", "autocomplete": "username"}))
+
+
 class CandidateProfileForm(forms.ModelForm):
     resume = forms.FileField(
         required=False,
@@ -48,10 +52,11 @@ class CandidateProfileForm(forms.ModelForm):
 
     class Meta:
         model = Profile
-        fields = ("headline", "location", "phone", "skills", "bio", "resume")
+        fields = ("headline", "location", "phone", "education_level", "experience_years", "skills", "bio", "resume")
         widgets = {
-            "skills": forms.TextInput(attrs={"placeholder": "Python, project management, customer service"}),
+            "skills": forms.TextInput(attrs={"placeholder": "Start typing a skill…", "autocomplete": "off"}),
             "bio": forms.Textarea(attrs={"rows": 4, "placeholder": "Describe your experience and strengths."}),
+            "experience_years": forms.NumberInput(attrs={"min": "0", "max": "60", "step": "0.5", "placeholder": "e.g. 2.5"}),
         }
 
     def clean_resume(self):
@@ -64,8 +69,13 @@ class CandidateProfileForm(forms.ModelForm):
 class JobForm(forms.ModelForm):
     class Meta:
         model = Job
-        fields = ("title", "company", "location", "employment_type", "salary_min", "salary_max", "description", "required_skills")
-        widgets = {"description": forms.Textarea(attrs={"rows": 5}), "required_skills": forms.TextInput(attrs={"placeholder": "Python, Django, SQL"})}
+        fields = ("title", "company", "location", "employment_type", "salary_min", "salary_max", "required_skills", "preferred_skills", "minimum_education", "experience_years", "description")
+        widgets = {
+            "description": forms.Textarea(attrs={"rows": 5}),
+            "required_skills": forms.TextInput(attrs={"placeholder": "Type to find skills…", "autocomplete": "off"}),
+            "preferred_skills": forms.TextInput(attrs={"placeholder": "Type to find optional skills…", "autocomplete": "off"}),
+            "experience_years": forms.NumberInput(attrs={"min": "0", "max": "60", "step": "0.5", "placeholder": "e.g. 2"}),
+        }
 
     def clean(self):
         data = super().clean()
@@ -93,3 +103,29 @@ class ApplicationForm(forms.ModelForm):
         if resume and resume.size > 5 * 1024 * 1024:
             raise forms.ValidationError("CV files must be 5 MB or smaller.")
         return resume
+
+
+class CompanyReportForm(forms.ModelForm):
+    class Meta:
+        model = CompanyReport
+        fields = ("company_name", "website", "details")
+        widgets = {
+            "company_name": forms.TextInput(attrs={"placeholder": "Company name"}),
+            "website": forms.URLInput(attrs={"placeholder": "https://example.com"}),
+            "details": forms.Textarea(attrs={"rows": 5, "placeholder": "Describe what happened and when."}),
+        }
+
+
+class ContactMessageForm(forms.ModelForm):
+    class Meta:
+        model = ContactMessage
+        fields = ("name", "email", "subject", "message")
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "Your name", "autocomplete": "name"}),
+            "email": forms.EmailInput(attrs={"placeholder": "you@example.com", "autocomplete": "email"}),
+            "subject": forms.TextInput(attrs={"placeholder": "How can we help?"}),
+            "message": forms.Textarea(attrs={"rows": 6, "placeholder": "Write your message here."}),
+        }
+
+    def clean_message(self):
+        return self.cleaned_data["message"].strip()

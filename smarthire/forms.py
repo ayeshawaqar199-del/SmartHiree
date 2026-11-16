@@ -8,8 +8,12 @@ from .models import Application, CompanyReport, ContactMessage, Job, Profile
 class SignUpForm(UserCreationForm):
     email = forms.EmailField(required=True)
     role = forms.ChoiceField(choices=Profile.ROLE_CHOICES, widget=forms.RadioSelect)
-    first_name = forms.CharField(max_length=150, required=True)
-    last_name = forms.CharField(max_length=150, required=True)
+    first_name = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={"autocomplete": "given-name", "data-alpha-only": "words"}))
+    last_name = forms.CharField(max_length=150, required=True, widget=forms.TextInput(attrs={"autocomplete": "family-name", "data-alpha-only": "words"}))
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].widget.attrs["data-alpha-only"] = "username"
 
     class Meta:
         model = User
@@ -17,9 +21,23 @@ class SignUpForm(UserCreationForm):
 
     def clean_username(self):
         username = self.cleaned_data.get("username", "").strip()
+        if username and not username.isalpha():
+            raise forms.ValidationError("Username can contain letters only, with no spaces or numbers.")
         if username and User.objects.filter(username__iexact=username).exists():
             raise forms.ValidationError("That username is already taken. Please choose another.")
         return username
+
+    def clean_first_name(self):
+        return self._clean_person_name("first_name")
+
+    def clean_last_name(self):
+        return self._clean_person_name("last_name")
+
+    def _clean_person_name(self, field_name):
+        value = " ".join(self.cleaned_data.get(field_name, "").split())
+        if value and any(not (part.isalpha()) for part in value.split(" ")):
+            raise forms.ValidationError("Use letters only. Spaces between names are allowed.")
+        return value
 
     def clean_email(self):
         email = self.cleaned_data["email"].strip().lower()
@@ -40,6 +58,12 @@ class SignUpForm(UserCreationForm):
 
 class EmailOrUsernameAuthenticationForm(AuthenticationForm):
     username = forms.CharField(label="Username or email", widget=forms.TextInput(attrs={"autofocus": True, "placeholder": "Username or email", "autocomplete": "username"}))
+
+    def clean_username(self):
+        value = self.cleaned_data.get("username", "").strip()
+        if value and "@" not in value and not value.isalpha():
+            raise forms.ValidationError("Username can contain letters only. For email login, enter your full email address.")
+        return value
 
 
 class CandidateProfileForm(forms.ModelForm):
@@ -121,7 +145,7 @@ class ContactMessageForm(forms.ModelForm):
         model = ContactMessage
         fields = ("name", "email", "subject", "message")
         widgets = {
-            "name": forms.TextInput(attrs={"placeholder": "Your name", "autocomplete": "name"}),
+            "name": forms.TextInput(attrs={"placeholder": "Your name", "autocomplete": "name", "data-alpha-only": "words"}),
             "email": forms.EmailInput(attrs={"placeholder": "you@example.com", "autocomplete": "email"}),
             "subject": forms.TextInput(attrs={"placeholder": "How can we help?"}),
             "message": forms.Textarea(attrs={"rows": 6, "placeholder": "Write your message here."}),
@@ -129,3 +153,9 @@ class ContactMessageForm(forms.ModelForm):
 
     def clean_message(self):
         return self.cleaned_data["message"].strip()
+
+    def clean_name(self):
+        value = " ".join(self.cleaned_data.get("name", "").split())
+        if value and any(not part.isalpha() for part in value.split(" ")):
+            raise forms.ValidationError("Use letters only. Spaces between names are allowed.")
+        return value

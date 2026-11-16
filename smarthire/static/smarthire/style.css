@@ -242,5 +242,20 @@ footer{color:var(--muted);border-color:var(--line)}.footer-brand{color:var(--bur
 .report-guidance h2,.report-layout .form-panel h2{font-size:21px;margin:0 0 14px;}
 .report-guidance ul{padding-left:20px;line-height:1.8;color:#46564d;}
 .report-guidance .muted{font-size:12px;margin-top:22px;}
+
+/* Final visual polish: keep SmartHire's burgundy and cream identity. */
+body{background:radial-gradient(ellipse at 50% -18%,#fffdf9 0%,var(--cream) 62%);}
+.site-header{border-bottom:1px solid #d8c5ad66;}
+.site-header-links>a:not(.button),.site-header-links .link-button{transition:color .18s ease,transform .18s ease;}
+.site-header-links>a:not(.button):hover,.site-header-links .link-button:hover{color:var(--burgundy-deep);transform:translateY(-1px);}
+.button{box-shadow:0 5px 14px #4a0f1e18;transition:background .18s ease,box-shadow .18s ease,transform .18s ease;}
+.button:hover{box-shadow:0 8px 19px #4a0f1e24;transform:translateY(-1px);}
+.button:active{transform:translateY(0);box-shadow:0 2px 7px #4a0f1e1c;}
+.panel,.job-card,.step-grid article,.employer-steps article,.contact-help-card,.contact-safety-card{box-shadow:0 12px 32px #4a0f1e0b;}
+.field input:not([type=radio]):not([type=checkbox]):not([type=file]),.field select,.field textarea{transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#9d5362;box-shadow:0 0 0 3px #6b1a2d18;background:#fffdf9;outline:0;}
+:focus-visible{outline:3px solid #a36c55;outline-offset:3px;}
+::selection{background:#6b1a2d;color:#fbf6ed;}
+@media(prefers-reduced-motion:reduce){.site-header-links>a:not(.button),.site-header-links .link-button,.button,.field input,.field select,.field textarea{transition:none!important}}
 @media(max-width:1000px){.site-header{padding:12px 22px;align-items:flex-start;flex-direction:column;}.site-header-links{justify-content:flex-start;flex-wrap:wrap;}.nav-landing{margin-top:35px;}}
 @media(max-width:760px){.site-header{padding:10px 16px;gap:9px;}.site-header-links{gap:8px 12px;font-size:11px;}.site-header-links>a:not(.button){white-space:normal;}.nav-alert{flex-basis:100%;}.site-header-links .nav-post,.site-header-links .nav-employers{padding:7px 10px;font-size:10px;}.nav-landing{margin:28px auto 55px;padding:0 18px;}.nav-landing>h1{font-size:36px;}.employer-steps,.report-layout{grid-template-columns:1fr;}.landing-actions{margin:20px 0 28px;}}

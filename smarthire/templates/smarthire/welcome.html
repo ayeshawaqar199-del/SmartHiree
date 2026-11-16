@@ -7,9 +7,9 @@
     <h1>Find a job<br><em>you’ll love.</em></h1>
     <p>Search real opportunities by role, skill or location. Find a better fit with SmartHire.</p>
   </div>
-  <form class="home-job-search" method="get" action="{% url 'job_list' %}">
-    <label class="home-search-field"><span>Job title, skill or company</span><input name="q" placeholder="e.g. Designer, Python, Acme"></label>
-    <label class="home-search-field"><span>City or location</span><input name="location" placeholder="e.g. Lahore or Remote"></label>
+  <form class="home-job-search" method="get" action="{% url 'job_list' %}" data-suggestions-url="{% url 'job_search_suggestions' %}">
+    <label class="home-search-field"><span>Job title, skill or company</span><input name="q" list="home-job-suggestions" data-search-kind="job" autocomplete="off" placeholder="e.g. Designer, Python, Acme"><datalist id="home-job-suggestions"></datalist></label>
+    <label class="home-search-field"><span>City or location</span><input name="location" list="home-location-suggestions" data-search-kind="location" autocomplete="off" placeholder="e.g. Lahore or Remote"><datalist id="home-location-suggestions"></datalist></label>
     <button class="button" type="submit">Search jobs <span aria-hidden="true">→</span></button>
   </form>
   <div class="home-search-foot"><span>Popular searches</span><a href="{% url 'job_list' %}?q=software">Software</a><a href="{% url 'job_list' %}?q=design">Design</a><a href="{% url 'job_list' %}?q=marketing">Marketing</a><a href="{% url 'job_list' %}?q=internship">Internships</a></div>

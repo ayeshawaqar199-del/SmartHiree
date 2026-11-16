@@ -86,6 +86,33 @@ def job_list(request):
     })
 
 
+def job_search_suggestions(request):
+    """Return live job titles, employers, skills, or cities for the home search fields."""
+    kind = request.GET.get("kind", "job")
+    query = request.GET.get("q", "").strip()[:80]
+    active_jobs = Job.objects.filter(is_active=True)
+
+    if kind == "location":
+        locations = active_jobs.order_by("location").values_list("location", flat=True).distinct()
+        suggestions = [location for location in locations if not query or query.casefold() in location.casefold()][:10]
+    else:
+        matches = active_jobs.order_by("-created_at").values_list("title", "company", "required_skills", "preferred_skills")[:60]
+        suggestions = []
+        seen = set()
+        for title, company, required, preferred in matches:
+            for value in (title, company, *split_skills(f"{required},{preferred}")):
+                value = value.strip()
+                key = value.casefold()
+                if value and key not in seen and (not query or query.casefold() in key):
+                    seen.add(key)
+                    suggestions.append(value)
+                    if len(suggestions) == 10:
+                        break
+            if len(suggestions) == 10:
+                break
+    return JsonResponse({"suggestions": suggestions})
+
+
 def skill_suggestions(request):
     query = request.GET.get("q", "").strip()
     return JsonResponse({"suggestions": suggest_skills(query)})

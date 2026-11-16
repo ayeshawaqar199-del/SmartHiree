@@ -10,6 +10,7 @@ urlpatterns = [
     path("contact/", views.contact, name="contact"),
     path("post-a-job/", views.post_job_entry, name="post_job_entry"),
     path("jobs/", views.job_list, name="job_list"),
+    path("jobs/search-suggestions/", views.job_search_suggestions, name="job_search_suggestions"),
     path("skills/suggest/", views.skill_suggestions, name="skill_suggestions"),
     path("guidance/chat/", views.guidance_chat, name="guidance_chat"),
     path("jobs/<int:pk>/", views.job_detail, name="job_detail"),

@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'smarthire/style.css' %}?v=homepage-motion-1">
+  <link rel="stylesheet" href="{% static 'smarthire/style.css' %}?v=homepage-chat-1">
 </head>
 <body>
   <nav class="nav site-header" aria-label="Main navigation">
@@ -58,8 +58,36 @@
     {% endif %}
     {% block content %}{% endblock %}
   </main>
+  <div class="guidance-chat" data-endpoint="{% url 'guidance_chat' %}">
+    <button class="chat-launcher" type="button" aria-expanded="false" aria-controls="guidance-chat-panel">
+      <span class="chat-launcher-icon" aria-hidden="true">✦</span><span>Chat for guidance</span>
+    </button>
+    <section class="chat-panel" id="guidance-chat-panel" aria-label="SmartHire guidance chat" hidden>
+      <header class="chat-header">
+        <span class="chat-avatar" aria-hidden="true">SH</span>
+        <span class="chat-header-copy"><strong>SmartHire Guide</strong><small>Instant career and hiring help</small></span>
+        <button class="chat-close" type="button" aria-label="Close guidance chat">×</button>
+      </header>
+      <div class="chat-messages" role="log" aria-live="polite" aria-relevant="additions">
+        <p class="chat-bubble chat-assistant">Hi! I can help with job search, applications, CVs, skill matches, or hiring. What do you need?</p>
+      </div>
+      <div class="chat-quick-prompts" aria-label="Suggested questions">
+        <button type="button" data-chat-prompt="How do I improve my profile?">Improve my profile</button>
+        <button type="button" data-chat-prompt="How do I apply for a job?">How to apply</button>
+        <button type="button" data-chat-prompt="Show job matches">Job matches</button>
+      </div>
+      <form class="chat-form" autocomplete="off">
+        {% csrf_token %}
+        <label class="visually-hidden" for="guidance-chat-input">Message SmartHire Guide</label>
+        <input id="guidance-chat-input" name="message" maxlength="500" placeholder="Ask for guidance…" required>
+        <button type="submit" aria-label="Send message">↑</button>
+      </form>
+      <p class="chat-disclaimer">Automated guidance; no live human agent. No chat history is saved.</p>
+    </section>
+  </div>
   <footer><span class="footer-brand">Smart Hire</span><span>Thoughtful hiring starts with a better match. <a href="{% url 'contact' %}">Contact us</a></span></footer>
   <script src="{% static 'smarthire/skill-suggestions.js' %}?v=1" data-suggestions-url="{% url 'skill_suggestions' %}" defer></script>
   <script src="{% static 'smarthire/name-validation.js' %}?v=1" defer></script>
+  <script src="{% static 'smarthire/guidance-chat.js' %}?v=1" defer></script>
 </body>
 </html>

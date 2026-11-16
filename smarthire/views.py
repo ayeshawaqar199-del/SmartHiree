@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model, login
 from django.contrib.auth.decorators import login_required
@@ -126,6 +128,67 @@ def _recommendations(profile, limit=5):
     matches = [{"job": job, "match": result} for job, result in zip(jobs, results)]
     matches.sort(key=lambda item: (item["match"]["score"], item["job"].created_at), reverse=True)
     return matches[:limit]
+
+
+@require_POST
+def guidance_chat(request):
+    """Answer common candidate and employer questions without sending chat text to a third party."""
+    try:
+        payload = json.loads(request.body or b"{}")
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"error": "Please send a valid message."}, status=400)
+    if not isinstance(payload, dict):
+        return JsonResponse({"error": "Please send a valid message."}, status=400)
+    prompt = str(payload.get("message", "")).strip()[:500]
+    if not prompt:
+        return JsonResponse({"error": "Type a message first."}, status=400)
+
+    words = prompt.casefold()
+    profile = getattr(request.user, "profile", None) if request.user.is_authenticated else None
+    role = profile.role if profile else "guest"
+    jobs_url = reverse("job_list")
+    signup_url = reverse("signup")
+    dashboard_url = reverse("dashboard") if request.user.is_authenticated else f"{reverse('login')}?next={reverse('dashboard')}"
+    actions = []
+    jobs = []
+
+    if any(word in words for word in ("resume", "cv", "curriculum", "upload")):
+        reply = "Add a PDF or DOCX CV to your candidate profile (up to 5 MB). SmartHire can extract skills and experience details; review them before saving."
+        actions = [{"label": "Open my profile", "url": dashboard_url}] if role == "candidate" else [{"label": "Create candidate account", "url": f"{signup_url}?role=candidate"}]
+    elif any(word in words for word in ("skill", "profile", "bio", "education", "experience")):
+        reply = "A complete candidate profile helps explain your fit. Add skills, education, experience and a short bio, then explore your recommendations."
+        actions = [{"label": "Open my profile", "url": dashboard_url}] if role == "candidate" else [{"label": "Create candidate account", "url": f"{signup_url}?role=candidate"}]
+    elif any(word in words for word in ("match", "recommend", "suggest", "fit")):
+        if role == "candidate":
+            matches = _recommendations(profile, limit=3)
+            jobs = [{"title": item["job"].title, "company": item["job"].company, "location": item["job"].location, "match": item["match"]["score"], "url": reverse("job_detail", args=[item["job"].pk])} for item in matches]
+            reply = "Here are a few open roles ranked against your profile." if jobs else "I couldn’t find an open role to recommend right now. Add more skills to your profile or browse all current openings."
+        else:
+            reply = "Candidates see skill match explanations on their dashboard. Create or complete a candidate profile to get personalized role recommendations."
+        actions = [{"label": "Browse open jobs", "url": jobs_url}]
+    elif any(word in words for word in ("apply", "application", "applied")):
+        reply = "Open a job listing and choose Apply. You can add a cover letter and use a saved CV or attach a PDF/DOCX. Your applications and status updates appear on your dashboard."
+        actions = [{"label": "Find open jobs", "url": jobs_url}]
+    elif any(word in words for word in ("employer", "hire", "hiring", "post a job", "recruit")):
+        reply = "Employers can create an employer account, post a role, and review applicants ranked by listed skills from the dashboard."
+        actions = [{"label": "Employer information", "url": reverse("employers")}, {"label": "Create employer account", "url": f"{signup_url}?role=employer"}]
+    elif any(word in words for word in ("report", "scam", "fraud", "suspicious")):
+        reply = "If a company or job seems suspicious, send a private report with the company name and details so the SmartHire team can review it."
+        actions = [{"label": "Report a company", "url": reverse("reported_companies")}]
+    elif any(word in words for word in ("contact", "human", "person", "support", "help desk")):
+        reply = "For help from the SmartHire team, use the contact page. This guidance chat is an automated helper and does not connect to a live human agent."
+        actions = [{"label": "Contact SmartHire", "url": reverse("contact")}]
+    elif any(word in words for word in ("job", "search", "salary", "location", "city", "remote", "internship")):
+        reply = "Use the job search filters for keywords, location, employment type and minimum salary. Open a role to see its details and listed skills."
+        actions = [{"label": "Search jobs", "url": jobs_url}]
+    elif any(word in words for word in ("login", "sign in", "account", "register", "sign up")):
+        reply = "Candidates and employers have separate account roles. Choose the role that fits you when creating an account, then sign in with your username or email."
+        actions = [{"label": "Create account", "url": signup_url}, {"label": "Sign in", "url": reverse("login")}]
+    else:
+        reply = "I can guide you with job search, applications, profile and CV setup, skill matches, or employer hiring. What would you like help with?"
+        actions = [{"label": "Search jobs", "url": jobs_url}, {"label": "Contact SmartHire", "url": reverse("contact")}]
+
+    return JsonResponse({"reply": reply, "actions": actions, "jobs": jobs})
 
 
 @login_required

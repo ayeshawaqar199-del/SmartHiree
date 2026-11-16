@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 from .forms import ApplicationForm, CandidateProfileForm, CompanyReportForm, ContactMessageForm, JobForm, SignUpForm
-from .matching import ResumeParseError, calculate_match, extract_resume_facts, extract_resume_text, extract_skills, split_skills, suggest_skills
+from .matching import ResumeParseError, calculate_match, calculate_match_batch, extract_resume_facts, extract_resume_text, extract_skills, split_skills, suggest_skills
 from .models import Application, CompanyReport, ContactMessage, Job, Notification, Profile
 
 User = get_user_model()
@@ -121,10 +121,9 @@ def signup(request):
 
 def _recommendations(profile, limit=5):
     applied_ids = Application.objects.filter(candidate=profile.user).values_list("job_id", flat=True)
-    matches = []
-    for job in Job.objects.filter(is_active=True).exclude(pk__in=applied_ids).select_related("employer"):
-        result = calculate_match(job, profile)
-        matches.append({"job": job, "match": result})
+    jobs = list(Job.objects.filter(is_active=True).exclude(pk__in=applied_ids).select_related("employer"))
+    results = calculate_match_batch((job, profile) for job in jobs)
+    matches = [{"job": job, "match": result} for job, result in zip(jobs, results)]
     matches.sort(key=lambda item: (item["match"]["score"], item["job"].created_at), reverse=True)
     return matches[:limit]
 
@@ -137,8 +136,8 @@ def dashboard(request):
         ranked_jobs = []
         for job in jobs:
             applicants = list(Application.objects.filter(job=job).select_related("candidate", "candidate__profile"))
-            for application in applicants:
-                current_match = calculate_match(job, application.candidate.profile)
+            match_results = calculate_match_batch((job, application.candidate.profile) for application in applicants)
+            for application, current_match in zip(applicants, match_results):
                 application.match_score = current_match["score"]
                 application.matched_skills = ", ".join(current_match["matched"])
                 application.missing_skills = ", ".join(current_match["missing"])

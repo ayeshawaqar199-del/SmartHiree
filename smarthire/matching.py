@@ -1,5 +1,6 @@
 import re
 import math
+from concurrent.futures import ThreadPoolExecutor
 import zipfile
 import xml.etree.ElementTree as ET
 
@@ -331,3 +332,22 @@ def calculate_match(job, profile, resume_text=""):
         "matched_preferred": matched_preferred,
         "candidate_skills": found, "breakdown": breakdown, "explanation": explanation,
     }
+
+
+def calculate_match_batch(job_profile_pairs, max_workers=4):
+    """Calculate independent job/profile matches concurrently, without ORM work in workers."""
+    pairs = list(job_profile_pairs)
+    if not pairs:
+        return []
+    if len(pairs) == 1:
+        job, profile = pairs[0]
+        return [calculate_match(job, profile)]
+
+    worker_count = max(1, min(max_workers, len(pairs)))
+    with ThreadPoolExecutor(max_workers=worker_count, thread_name_prefix="smarthire-match") as pool:
+        return list(pool.map(_calculate_match_pair, pairs))
+
+
+def _calculate_match_pair(pair):
+    job, profile = pair
+    return calculate_match(job, profile)

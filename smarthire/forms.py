@@ -15,6 +15,20 @@ class SignUpForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        username_field = self.fields["username"]
+        username_field.min_length = 6
+        username_field.max_length = 150
+        username_field.widget.attrs.update({
+            "minlength": "6",
+            "maxlength": "150",
+            "data-alpha-only": "username",
+            "autocomplete": "username",
+            "autocapitalize": "none",
+            "spellcheck": "false",
+            "placeholder": "6–150 characters: letters, numbers, . _ @ + -",
+            "pattern": "[A-Za-z0-9_.@+\\-]{6,150}",
+            "title": "Use 6 to 150 characters: letters, numbers, and . _ @ + -",
+        })
 
     class Meta:
         model = User
@@ -22,6 +36,10 @@ class SignUpForm(UserCreationForm):
 
     def clean_username(self):
         username = self.cleaned_data.get("username", "").strip()
+        if len(username) < 6:
+            raise forms.ValidationError("Username must contain at least 6 characters.")
+        if len(username) > 150:
+            raise forms.ValidationError("Username cannot exceed 150 characters.")
         if username and not re.fullmatch(r"[\w.@+-]+", username, flags=re.UNICODE):
             raise forms.ValidationError("Use letters, numbers, and . _ @ + - only; spaces are not allowed.")
         if username and User.objects.filter(username__iexact=username).exists():

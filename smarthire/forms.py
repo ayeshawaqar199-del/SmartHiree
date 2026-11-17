@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 from django.contrib.auth.models import User
@@ -21,8 +23,8 @@ class SignUpForm(UserCreationForm):
 
     def clean_username(self):
         username = self.cleaned_data.get("username", "").strip()
-        if username and not username.isalpha():
-            raise forms.ValidationError("Username can contain letters only, with no spaces or numbers.")
+        if username and not re.fullmatch(r"[\w.@+-]+", username, flags=re.UNICODE):
+            raise forms.ValidationError("Use letters, numbers, and . _ @ + - only; spaces are not allowed.")
         if username and User.objects.filter(username__iexact=username).exists():
             raise forms.ValidationError("That username is already taken. Please choose another.")
         return username
@@ -61,8 +63,8 @@ class EmailOrUsernameAuthenticationForm(AuthenticationForm):
 
     def clean_username(self):
         value = self.cleaned_data.get("username", "").strip()
-        if value and "@" not in value and not value.isalpha():
-            raise forms.ValidationError("Username can contain letters only. For email login, enter your full email address.")
+        if value and "@" not in value and not re.fullmatch(r"[\w.+-]+", value, flags=re.UNICODE):
+            raise forms.ValidationError("Enter a valid username or your full email address.")
         return value
 
 

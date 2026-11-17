@@ -67,6 +67,10 @@ class EmailOrUsernameAuthenticationForm(AuthenticationForm):
 
 
 class CandidateProfileForm(forms.ModelForm):
+    experience_years = forms.DecimalField(
+        required=False, min_value=0, max_value=60, max_digits=4, decimal_places=1,
+        widget=forms.NumberInput(attrs={"min": "0", "max": "60", "step": "0.5", "placeholder": "e.g. 2.5"}),
+    )
     resume = forms.FileField(
         required=False,
         validators=[FileExtensionValidator(["pdf", "docx"])],
@@ -91,6 +95,11 @@ class CandidateProfileForm(forms.ModelForm):
 
 
 class JobForm(forms.ModelForm):
+    experience_years = forms.DecimalField(
+        required=False, min_value=0, max_value=60, max_digits=4, decimal_places=1,
+        widget=forms.NumberInput(attrs={"min": "0", "max": "60", "step": "0.5", "placeholder": "e.g. 2"}),
+    )
+
     class Meta:
         model = Job
         fields = ("title", "company", "location", "employment_type", "salary_min", "salary_max", "required_skills", "preferred_skills", "minimum_education", "experience_years", "description")

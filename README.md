@@ -65,3 +65,31 @@ The current SmartHire flows cover these functional requirements:
 13. Administrator review of CV status from Django Admin.
 
 Matching is transparent keyword and skill phrase matching; it is not a trained AI model. Scanned PDFs without selectable text need OCR and are reported as unsupported. To use CV extraction, install all project dependencies with `python -m pip install -r requirements.txt`, apply migrations, and sign in as a candidate. Create an administrator with `python manage.py createsuperuser` to review CVs in `/admin/`.
+
+
+## Coursework implementation checklist
+
+### User interfaces
+The browser interface includes the welcome and job-discovery pages, job details and application form, candidate and employer dashboards, registration and login, job-posting forms, notifications, company reports, and contact. Shared templates and responsive styling are in `smarthire/templates/smarthire/` and `smarthire/static/smarthire/style.css`.
+
+### Database connectivity and validation
+Django ORM models persist candidate profiles, jobs, applications, notifications, company reports, and contact messages. Registration uses Django authentication and creates a profile. The candidate profile, job, application, company-report, and contact forms are connected to their respective database models. Server-side validation covers required fields, email and username uniqueness, password strength, numeric experience (0–60 years), salary ordering, CV file type and 5 MB size, and valid application-status choices. The database also prevents duplicate applications for the same candidate and job.
+
+### Design patterns
+SmartHire now demonstrates two explicit patterns in resume processing:
+- **Strategy Pattern:** `PdfResumeParser` and `DocxResumeParser` provide interchangeable implementations behind the `ResumeParserStrategy` interface.
+- **Factory Pattern:** `ResumeParserFactory` selects the appropriate parser using the uploaded file extension. A new parser can be added without changing the view or matching workflow.
+
+Implementation: `smarthire/patterns.py`; integration point: `extract_resume_text()` in `smarthire/matching.py`.
+
+### Threads
+`calculate_match_batch()` uses Python's `ThreadPoolExecutor` with the `smarthire-match` thread-name prefix to calculate independent job/profile matches concurrently. Database queries are performed by the request thread before the worker pool is called; the workers only process the supplied objects.
+
+### Automated checks
+Run the project tests after installing requirements and applying migrations:
+
+```powershell
+python manage.py test smarthire
+```
+
+The tests cover parser selection and extraction, database persistence for the model-backed forms, server-side validation, and execution of batched matching in worker threads.

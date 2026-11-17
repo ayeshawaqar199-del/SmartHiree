@@ -1,8 +1,8 @@
 import re
 import math
 from concurrent.futures import ThreadPoolExecutor
-import zipfile
-import xml.etree.ElementTree as ET
+
+from .patterns import ResumeParseError, ResumeParserFactory
 
 
 SKILL_CATALOG = (
@@ -92,10 +92,6 @@ def suggest_skills(prefix, limit=18):
         if len(suggestions) == limit:
             break
     return suggestions
-
-
-class ResumeParseError(ValueError):
-    pass
 
 
 def normalize_skill(value):
@@ -196,39 +192,9 @@ def extract_resume_facts(text):
 
 
 def extract_resume_text(upload):
-    """Read text from text-based PDF and DOCX uploads. Scanned PDFs need OCR."""
-    name = getattr(upload, "name", "").lower()
-    try:
-        upload.seek(0)
-        if name.endswith(".pdf"):
-            from pypdf import PdfReader
-            reader = PdfReader(upload, strict=False)
-            if reader.is_encrypted:
-                try:
-                    reader.decrypt("")
-                except Exception as exc:
-                    raise ResumeParseError("This PDF is password protected. Upload an unlocked copy.") from exc
-            chunks = []
-            for page in reader.pages[:20]:
-                chunks.append(page.extract_text() or "")
-            text = "\n".join(chunks)
-        elif name.endswith(".docx"):
-            with zipfile.ZipFile(upload) as archive:
-                info = archive.getinfo("word/document.xml")
-                if info.file_size > 5 * 1024 * 1024:
-                    raise ResumeParseError("This Word document expands beyond the supported size.")
-                root = ET.fromstring(archive.read("word/document.xml"))
-            text = " ".join(node.text or "" for node in root.iter("{http://schemas.openxmlformats.org/wordprocessingml/2006/main}t"))
-        else:
-            raise ResumeParseError("Upload a PDF or DOCX file so SmartHire can read its skills.")
-    except ResumeParseError:
-        raise
-    except Exception as exc:
-        raise ResumeParseError("We couldn't read this CV. Try a text-based PDF or a valid DOCX file.") from exc
-    upload.seek(0)
-    if not text.strip():
-        raise ResumeParseError("No selectable text was found. Scanned PDFs need OCR; upload a text-based PDF or DOCX.")
-    return text[:150_000]
+    """Delegate CV extraction to the Strategy and Factory implementations."""
+    parser = ResumeParserFactory.create(getattr(upload, "name", ""))
+    return parser.extract(upload)
 
 
 def _profile_evidence(profile, resume_text=""):

@@ -414,7 +414,8 @@ def notification_center(request):
         Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         messages.success(request, "Notifications marked as read.")
         return redirect("notifications")
-    return render(request, "smarthire/notifications.html", {"notifications": request.user.notifications.all()})
+    unread_notifications = request.user.notifications.filter(is_read=False)
+    return render(request, "smarthire/notifications.html", {"notifications": unread_notifications})
 
 
 @login_required
@@ -451,5 +452,8 @@ def notification_open(request, pk):
         notification.save(update_fields=["is_read"])
     target = notification.link
     if not target.startswith("/") or target.startswith("//"):
-        target = reverse("dashboard")
-    return redirect(target)
+        target = ""
+    return render(request, "smarthire/notification_detail.html", {
+        "notification": notification,
+        "target": target,
+    })

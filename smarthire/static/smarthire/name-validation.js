@@ -1,15 +1,23 @@
 (() => {
   const letter = /\p{L}/u;
+  const usernameCharacter = /[\p{L}\p{N}_.@+-]/u;
+
   document.querySelectorAll("[data-alpha-only]").forEach((field) => {
     const mode = field.dataset.alphaOnly;
     const clean = (value) => {
       let result = "";
       for (const character of value) {
-        if (letter.test(character)) result += character;
-        else if (mode === "words" && /\s/u.test(character) && result && !result.endsWith(" ")) result += " ";
+        if (mode === "username") {
+          if (usernameCharacter.test(character)) result += character;
+        } else if (letter.test(character)) {
+          result += character;
+        } else if (mode === "words" && /\s/u.test(character) && result && !result.endsWith(" ")) {
+          result += " ";
+        }
       }
       return mode === "words" ? result.replace(/\s+$/u, "") : result;
     };
+
     field.addEventListener("input", () => {
       const start = field.selectionStart;
       const before = field.value;
@@ -20,6 +28,7 @@
         field.setSelectionRange(removedBeforeCaret, removedBeforeCaret);
       }
     });
+
     field.addEventListener("paste", (event) => {
       const pasted = event.clipboardData?.getData("text") || "";
       if (!pasted) return;

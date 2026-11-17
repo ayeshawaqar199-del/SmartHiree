@@ -1,3 +1,9 @@
+databases:
+  - name: smarthire-db
+    plan: free
+    databaseName: smarthire
+    user: smarthire
+
 services:
   - type: web
     name: smarthire
@@ -13,4 +19,6 @@ services:
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: smarthire-db
+          property: connectionString

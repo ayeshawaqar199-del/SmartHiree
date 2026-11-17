@@ -1,0 +1,7 @@
+{% extends 'smarthire/base.html' %}
+{% block title %}Message — SmartHire{% endblock %}
+{% block content %}
+<section class="page-head"><span class="eyebrow">Inbox · Message</span><h1>Message</h1><p>This message has been marked as read.</p></section>
+<section class="section compact"><article class="notification-row"><div><b>{{ notification.message }}</b><small>{{ notification.created_at|date:'M j, Y · g:i A' }}</small></div></article>
+<div class="form-actions" style="display:flex;gap:12px;margin-top:24px;flex-wrap:wrap;"><a class="button" href="{% url 'notifications' %}">Back to inbox</a>{% if target %}<a class="button secondary" href="{{ target }}">View related application</a>{% endif %}</div></section>
+{% endblock %}
